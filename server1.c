@@ -7,12 +7,43 @@
 #include <errno.h>
 
 #include "shared1.h"
+struct Memory *shmPTR;
+
+// Finds the next avaliable thread slot, sets it to 1 and returns the index of its location or -1 if threads are full
+int findNextSlot(){
+	for(int i = 0; i < 11; i++){
+		if(shmPTR->serverFlag[i] == 0){
+			shmPTR->serverFlag[i] = 1;
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void handleInput(){
+
+	while(shmPTR->number != -2){
+		if(shmPTR->clientFlag == 1){
+			printf("number: %d\n",shmPTR->number);
+			int nextSlot = findNextSlot();
+			printf("nextSlot is %d\n",nextSlot);
+			if(nextSlot > 0){
+				shmPTR->clientFlag = 0;
+				shmPTR->number = nextSlot;
+			}else{
+				shmPTR->clientFlag = 0;
+				shmPTR->number = nextSlot;
+			}
+		}
+	}
+
+}
 
 int main(int argc, char *argv[]){
 	
 	key_t ShmKEY;
 	int ShmID;
-	struct Memory *shmPTR;
 
 //-------------------------- Connect to shared memory
 	ShmKEY = ftok(".", 'x');
@@ -40,14 +71,8 @@ int main(int argc, char *argv[]){
 		shmPTR->serverFlag[i] = 0;
 		shmPTR->slot[i] = 0;
 	}
-	shmPTR->slot[10] = 1;
-
-	printf("%d %d %d\n", shmPTR->serverFlag[10], shmPTR->slot[10], shmPTR->clientFlag);
 	
-	while(shmPTR->number != -1){
-		sleep(1);
-		printf("%d\n",shmPTR->number);
-	}
+	handleInput();
 	
 	shmdt((void *) shmPTR);
 	printf("Server Disconnected\n");

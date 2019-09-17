@@ -9,11 +9,37 @@
 
 #include "shared1.h"
 
+struct Memory *shmptr;
+
+void handleInput(){
+
+	char buffer[1];
+	while(shmptr->number != -2){
+
+		if(shmptr->clientFlag == 0){
+			fgets(buffer, 4, stdin);
+			strtok(buffer, "\n");
+			shmptr->number = atoi(buffer);
+			shmptr->clientFlag = 1;
+			bzero(buffer, sizeof(buffer));
+
+			//Wait for server to accept request
+			while(shmptr->clientFlag != 0);
+			if(shmptr->number != -1){
+				printf("Server Started request in slot: %d\n",shmptr->number);
+			}else{
+				printf("Server cannot handle more than 10 requests\n");
+			}
+		}
+	}
+
+}
+
+
 int main(){
 	
 	key_t ShmKEY;
 	int ShmID;
-	struct Memory *shmptr;
 	
 	ShmKEY = ftok(".", 'x');
 	ShmID = shmget(ShmKEY, sizeof(struct Memory), 0666);
@@ -27,13 +53,7 @@ int main(){
 	shmptr = (struct Memory *) shmat(ShmID, NULL, 0);
 	printf("Client Connected\n");
 
-	char buffer[1];
-	while(shmptr->number != -1){
-		fgets(buffer, 4, stdin);
-		strtok(buffer, "\n");
-		shmptr->number = atoi(buffer);
-		bzero(buffer, sizeof(buffer));
-	}
+	handleInput();
 	
 	shmdt((void *) shmptr);
 	printf("Client Complete\n");
