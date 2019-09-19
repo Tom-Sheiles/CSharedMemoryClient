@@ -11,31 +11,37 @@
 struct Memory *shmPTR;
 int threadSlots[10];
 
+// Struct used as function parameter for multithreaded functions
 typedef struct {
-    int nextNumber;
+    unsigned int nextNumber;
 } threadInformation;
 
 
-void *trialDivision(){
+void *trialDivision(void *args){
 	//printf("Trial Div\n");
+	threadInformation *number = args;
+	printf("%u\n", number->nextNumber);
 }
 
+// takes a 32 bit unsigned integer and circularly rotates it by the input n. Then returns this rotated number
+unsigned int bitRotate(unsigned int number, int n){
+	return ((unsigned int)number << n) | (number >> (32 - n));
+}
 
+// Rotates the input number 32 times and spawns a thread for each number to continue calculation
 void *beginCalculation(void *args){
 	
 	threadInformation *argsStruct = args;
 	pthread_t rotationThreads[32];
 
-	for(int i = 0; i < 33; i++)
-		pthread_create(&(rotationThreads[i]), NULL, &trialDivision, NULL);
+	for(int i = 0; i < 32; i++){
+		threadInformation *rotatedNumber = malloc(sizeof(rotatedNumber));
+		rotatedNumber->nextNumber = bitRotate(argsStruct->nextNumber, i);
+		pthread_create(&(rotationThreads[i]), NULL, &trialDivision, rotatedNumber);
+	}
 
-	for(int i = 0; i < 33; i++)
+	for(int i = 0; i < 32; i++)
 		pthread_join(rotationThreads[i], NULL);
-
-	/*while(1){
-		printf("Thread Value: %d\n", argsStruct->nextNumber);
-		sleep(1);
-	}*/
 }
 
 // Finds the next avaliable thread slot, sets it to 1 and returns the index of its location or -1 if threads are full
@@ -49,7 +55,8 @@ int findNextSlot(){
 	return -1;
 }
 
-void createNewThread(pthread_t threadSlots[10], int threadSlot, int number){
+// Creates a new thread for each new input that is recieved from the client and passes the number to this thread.
+void createNewThread(pthread_t threadSlots[10], int threadSlot, unsigned int number){
 	
 	threadInformation *threadArgs = malloc(sizeof *threadArgs);
 	threadArgs->nextNumber = number;
@@ -60,10 +67,11 @@ void createNewThread(pthread_t threadSlots[10], int threadSlot, int number){
 
 }
 
+// Waits for the handshake flag to be set by the client and reads the value in number. 
 void handleInput(){
 
 	pthread_t threadSlots[10];
-	int nextNumber;
+	unsigned int nextNumber;
 
 	while(shmPTR->number != -2){
 		if(shmPTR->clientFlag == 1){
@@ -88,6 +96,7 @@ void handleInput(){
 
 }
 
+// main function handles connection to the shared memory and initializes its values.
 int main(int argc, char *argv[]){
 	
 	key_t ShmKEY;
