@@ -6,21 +6,34 @@
 #include <sys/shm.h>
 #include <errno.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "shared1.h"
 struct Memory *shmPTR;
 int threadSlots[10];
+pthread_mutex_t mutex;
 
 // Struct used as function parameter for multithreaded functions
 typedef struct {
     unsigned int nextNumber;
+	int tNumber;
 } threadInformation;
 
 
 void *trialDivision(void *args){
-	//printf("Trial Div\n");
 	threadInformation *number = args;
-	printf("%u\n", number->nextNumber);
+	for(int i = 1; i <= number->nextNumber; i++){
+		//sleep(1);
+		if(number->nextNumber % i == 0){
+			pthread_mutex_lock(&mutex);
+			//printf("\n");
+			printf("%u: %u ",number->nextNumber,i);
+			while(shmPTR->serverFlag[number->tNumber] != 0);
+			shmPTR->serverFlag[number->tNumber] = 1;
+			shmPTR->slot[number->tNumber] = i;
+			pthread_mutex_unlock(&mutex);
+		}
+	}
 }
 
 // takes a 32 bit unsigned integer and circularly rotates it by the input n. Then returns this rotated number
@@ -32,16 +45,20 @@ unsigned int bitRotate(unsigned int number, int n){
 void *beginCalculation(void *args){
 	
 	threadInformation *argsStruct = args;
+	pthread_mutex_init(&mutex, NULL);
 	pthread_t rotationThreads[32];
 
-	for(int i = 0; i < 32; i++){
+	for(int i = 0; i < 4; i++){
 		threadInformation *rotatedNumber = malloc(sizeof(rotatedNumber));
 		rotatedNumber->nextNumber = bitRotate(argsStruct->nextNumber, i);
 		pthread_create(&(rotationThreads[i]), NULL, &trialDivision, rotatedNumber);
 	}
 
-	for(int i = 0; i < 32; i++)
+	for(int i = 0; i < 4; i++){
 		pthread_join(rotationThreads[i], NULL);
+		printf("\nThread %d done\n",i);
+	}
+	printf("Threads done\n");
 }
 
 // Finds the next avaliable thread slot, sets it to 1 and returns the index of its location or -1 if threads are full
@@ -60,6 +77,7 @@ void createNewThread(pthread_t threadSlots[10], int threadSlot, unsigned int num
 	
 	threadInformation *threadArgs = malloc(sizeof *threadArgs);
 	threadArgs->nextNumber = number;
+	threadArgs->tNumber = threadSlot;
 	printf("slot %d\n",threadSlot);	
 
 	pthread_create(&(threadSlots[threadSlot]), NULL, &beginCalculation, threadArgs);
