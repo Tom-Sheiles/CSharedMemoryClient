@@ -14,11 +14,15 @@
 struct Memory *shmptr;
 int inputNumbers[10];
 
+typedef struct{
+	int inputNumber;
+}returnInfo;
+
 void *serverOutput(){
 	while(1){
 		for(int i = 0; i < 10; i++){
 			if(shmptr->serverFlag[i] == 1){
-				printf("%d: %u\n",inputNumbers[i], shmptr->slot[i]);
+				printf("%d: %u \n",inputNumbers[i], shmptr->slot[i]);
 				shmptr->serverFlag[i] = 0;
 			}	
 		}
@@ -48,6 +52,8 @@ void handleInput(){
 			if(shmptr->number != -1){
 				printf("Server Started request in slot: %d\n",shmptr->number);
 				inputNumbers[shmptr->number] = number;
+				//returnInfo *returninfo = malloc(sizeof(returninfo));
+				//returninfo->inputNumber = number; // ############### TODO HERE PRINT FOR ALL THREADS
 			}else{
 				printf("Server cannot handle more than 10 requests\n");
 			}

@@ -27,7 +27,7 @@ void *trialDivision(void *args){
 		if(number->nextNumber % i == 0){
 			pthread_mutex_lock(&mutex);
 			//printf("\n");
-			printf("%u: %u ",number->nextNumber,i);
+			//printf("%u: %u ",number->nextNumber,i);
 			while(shmPTR->serverFlag[number->tNumber] != 0);
 			shmPTR->serverFlag[number->tNumber] = 1;
 			shmPTR->slot[number->tNumber] = i;
@@ -99,6 +99,8 @@ void handleInput(){
 			if(nextSlot >= 0){
 				printf("number: %d\n",shmPTR->number);
 				printf("nextSlot is %d\n",nextSlot);
+				if(shmPTR->number == -2)
+					return;
 
 				nextNumber = shmPTR->number;
 				shmPTR->clientFlag = 0;
