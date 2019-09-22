@@ -27,8 +27,10 @@ void *trialDivision(void *args){
 		if(number->nextNumber % i == 0){
 			pthread_mutex_lock(&mutex);
 			//printf("\n");
-			//printf("%u: %u ",number->nextNumber,i);
+			//printf("%u: %u \n",number->nextNumber,i);
+			//printf("%d\n", number->tNumber);
 			while(shmPTR->serverFlag[number->tNumber] != 0);
+			
 			shmPTR->serverFlag[number->tNumber] = 1;
 			shmPTR->slot[number->tNumber] = i;
 			pthread_mutex_unlock(&mutex);
@@ -51,14 +53,16 @@ void *beginCalculation(void *args){
 	for(int i = 0; i < 32; i++){
 		threadInformation *rotatedNumber = malloc(sizeof(rotatedNumber));
 		rotatedNumber->nextNumber = bitRotate(argsStruct->nextNumber, i);
+		rotatedNumber->tNumber = argsStruct->tNumber;
 		pthread_create(&(rotationThreads[i]), NULL, &trialDivision, rotatedNumber);
 	}
 
 	for(int i = 0; i < 32; i++){
 		pthread_join(rotationThreads[i], NULL);
-		printf("\nThread %d done\n",i);
+		//printf("\nThread %d done\n",i);
 	}
-	printf("Threads done\n");
+	printf("Thread %d done\n",argsStruct->tNumber);
+	threadSlots[argsStruct->tNumber] = 0;
 }
 
 // Finds the next avaliable thread slot, sets it to 1 and returns the index of its location or -1 if threads are full
@@ -82,6 +86,7 @@ void createNewThread(pthread_t threadSlots[10], int threadSlot, unsigned int num
 
 	pthread_create(&(threadSlots[threadSlot]), NULL, &beginCalculation, threadArgs);
 	printf("ThreadCreated\n");
+	//pthread_join(threadSlots[threadSlot], NULL);
 
 }
 

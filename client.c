@@ -21,8 +21,10 @@ typedef struct{
 void *serverOutput(){
 	while(1){
 		for(int i = 0; i < 10; i++){
+			//sleep(2);
 			if(shmptr->serverFlag[i] == 1){
-				printf("%d: %u \n",inputNumbers[i], shmptr->slot[i]);
+				printf("%u ", shmptr->slot[i]);
+				fflush(stdout);
 				shmptr->serverFlag[i] = 0;
 			}	
 		}
