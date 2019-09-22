@@ -48,13 +48,13 @@ void *beginCalculation(void *args){
 	pthread_mutex_init(&mutex, NULL);
 	pthread_t rotationThreads[32];
 
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < 32; i++){
 		threadInformation *rotatedNumber = malloc(sizeof(rotatedNumber));
 		rotatedNumber->nextNumber = bitRotate(argsStruct->nextNumber, i);
 		pthread_create(&(rotationThreads[i]), NULL, &trialDivision, rotatedNumber);
 	}
 
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < 32; i++){
 		pthread_join(rotationThreads[i], NULL);
 		printf("\nThread %d done\n",i);
 	}
