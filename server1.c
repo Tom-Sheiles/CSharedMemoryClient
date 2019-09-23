@@ -49,6 +49,7 @@ void *beginCalculation(void *args){
 	threadInformation *argsStruct = args;
 	pthread_mutex_init(&mutex, NULL);
 	pthread_t rotationThreads[32];
+	int completeThreads = 0;
 
 	for(int i = 0; i < 32; i++){
 		threadInformation *rotatedNumber = malloc(sizeof(rotatedNumber));
@@ -59,7 +60,14 @@ void *beginCalculation(void *args){
 
 	for(int i = 0; i < 32; i++){
 		pthread_join(rotationThreads[i], NULL);
-		//printf("\nThread %d done\n",i);
+		printf("\nThread %d done\n",i);
+		completeThreads++;
+		float percent = (float)completeThreads/32;
+		percent *= 100;
+		percent /= 10;
+		shmPTR->complete[argsStruct->tNumber] = percent;
+		printf("n bars %d\n",(int)shmPTR->complete[argsStruct->tNumber]);
+
 	}
 	printf("Thread %d done\n",argsStruct->tNumber);
 	threadSlots[argsStruct->tNumber] = 0;

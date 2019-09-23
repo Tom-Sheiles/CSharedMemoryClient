@@ -13,6 +13,7 @@
 
 struct Memory *shmptr;
 int inputNumbers[10];
+int isFirstSlot;
 
 typedef struct{
 	int inputNumber;
@@ -54,12 +55,65 @@ void *serverOutput(){
 	}
 }
 
+void *printOutput(){
+	int lines = 0;
+	int flag = 0;
+	isFirstSlot = 0;
+	while(1){
+		sleep(3);
+		/*if(flag != 0){
+			for(int i = 0; i < 10; i++){
+				
+				printf("\033[A\33[2K\r");
+				printf("\033[A\33[2K\r");
+				if(inputNumbers[i] > 0){
+					printf("\033[A\33[2K\r");
+					printf("\033[A\33[2K\r");
+				}
+				if(isFirstSlot == 1){
+					printf("\033[A\33[2K\r");
+					printf("\033[A\33[2K\r");
+					isFirstSlot = 0;
+				}
+				
+			}
+		}*/
+		if(isFirstSlot == 1)
+			lines += 2;
+		for(int i = 0; i < lines; i++){
+			printf("\033[A\33[2K\r");
+		}
+		isFirstSlot = 0;
+		lines = 0;
+		for(int j = 0; j < 10; j++){
+			if(inputNumbers[j] > 0)
+				printf("Slot %d\n",j);
+			else
+				printf(" \n");
+			lines+=2;
+			for(int k = 0; k < factors[j].used; k++){
+				if(factors[j].array[k] > 0){
+					printf("%u ",factors[j].array[k]);
+					fflush(stdout);
+				}
+			}
+			printf("\n");
+			if(factors[j].used > 1){
+				if(factors[j].array[0] > 0)
+					lines+=2;
+			}
+		}
+		
+	}
+}
+
 
 void handleInput(){
 
 	pthread_t resultThread;
+	pthread_t outputPrint;
 	pthread_create(&(resultThread), NULL, &serverOutput, NULL);
-	
+	pthread_create(&(outputPrint), NULL, &printOutput, NULL);	
 
 	char buffer[1];
 	while(shmptr->number != -2){
@@ -67,6 +121,7 @@ void handleInput(){
 	
 
 		if(shmptr->clientFlag == 0){
+			printf("> ");
 			fgets(buffer, 4, stdin);
 			strtok(buffer, "\n");
 			int number = atoi(buffer);
@@ -95,6 +150,7 @@ void handleInput(){
 			while(shmptr->clientFlag != 0);
 			if(shmptr->number != -1){
 				printf("Server Started request in slot: %d\n",shmptr->number);
+				isFirstSlot = 1;
 				inputNumbers[shmptr->number] = number;
 				CreateVector(&factors[shmptr->number], 100);
 				
@@ -108,6 +164,13 @@ void handleInput(){
 
 
 int main(){
+
+
+	/*printf("test\n");
+	sleep(1);
+	printf("\033[A\33[2K\r");
+	printf("test2\n");
+	return 0;*/
 	
 	key_t ShmKEY;
 	int ShmID;
