@@ -55,36 +55,37 @@ void *serverOutput(){
 	}
 }
 
+void printProgBar(){
+	for(int i = 0; i < 10; i++){
+		if(i == 5)
+			printf("\n");
+		int j = 0;
+		printf("thread %d %d%%[", i, (int)shmptr->complete[i]*10);
+		for(j = 0; j < (int)shmptr->complete[i]; j++){
+			printf("#");
+		}
+		for(int k = j; k < 10; k++){
+			printf(".");
+		}
+		printf("] ");
+	}
+	printf("\n");
+}
+
 void *printOutput(){
 	int lines = 0;
 	int flag = 0;
 	isFirstSlot = 0;
 	while(1){
 		sleep(3);
-		/*if(flag != 0){
-			for(int i = 0; i < 10; i++){
-				
-				printf("\033[A\33[2K\r");
-				printf("\033[A\33[2K\r");
-				if(inputNumbers[i] > 0){
-					printf("\033[A\33[2K\r");
-					printf("\033[A\33[2K\r");
-				}
-				if(isFirstSlot == 1){
-					printf("\033[A\33[2K\r");
-					printf("\033[A\33[2K\r");
-					isFirstSlot = 0;
-				}
-				
-			}
-		}*/
 		if(isFirstSlot == 1)
 			lines += 2;
 		for(int i = 0; i < lines; i++){
 			printf("\033[A\33[2K\r");
 		}
 		isFirstSlot = 0;
-		lines = 0;
+		lines = 2;
+		printProgBar();
 		for(int j = 0; j < 10; j++){
 			if(inputNumbers[j] > 0)
 				printf("Slot %d\n",j);
@@ -128,19 +129,6 @@ void handleInput(){
 			shmptr->number = number;
 			shmptr->clientFlag = 1;
 
-			// ########TODO FINISH PRINT STATEMENTS FROM HERE AND DO PROGRESS BAR
-			if(atoi(buffer) == -3){
-				
-				for(int j = 0; j < 10; j++){
-					printf("Slot %d\n",j);
-					for(int k = 0; k < factors[j].used; k++){
-						printf("%u ",factors[j].array[k]);
-					}
-					printf("\n");
-				}
-				shmptr->number = -2;
-				return;
-			}
 			if(atoi(buffer) == -2)
 				return;
 

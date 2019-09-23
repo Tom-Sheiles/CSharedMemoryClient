@@ -12,6 +12,7 @@
 struct Memory *shmPTR;
 int threadSlots[10];
 pthread_mutex_t mutex;
+int delay;
 
 // Struct used as function parameter for multithreaded functions
 typedef struct {
@@ -23,7 +24,6 @@ typedef struct {
 void *trialDivision(void *args){
 	threadInformation *number = args;
 	for(int i = 1; i <= number->nextNumber; i++){
-		//sleep(1);
 		if(number->nextNumber % i == 0){
 			pthread_mutex_lock(&mutex);
 			//printf("\n");
@@ -60,13 +60,13 @@ void *beginCalculation(void *args){
 
 	for(int i = 0; i < 32; i++){
 		pthread_join(rotationThreads[i], NULL);
-		printf("\nThread %d done\n",i);
+		sleep(delay);
+		//printf("\nThread %d done\n",i);
 		completeThreads++;
 		float percent = (float)completeThreads/32;
 		percent *= 100;
 		percent /= 10;
 		shmPTR->complete[argsStruct->tNumber] = percent;
-		printf("n bars %d\n",(int)shmPTR->complete[argsStruct->tNumber]);
 
 	}
 	printf("Thread %d done\n",argsStruct->tNumber);
@@ -132,6 +132,11 @@ void handleInput(){
 // main function handles connection to the shared memory and initializes its values.
 int main(int argc, char *argv[]){
 	
+	if(argc > 1)
+		delay = atoi(argv[1]);
+	else
+		delay = 0;
+
 	key_t ShmKEY;
 	int ShmID;
 
